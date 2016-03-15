@@ -2,10 +2,8 @@
 
 const States = require('../index')
   , chai = require('chai')
-  , expect = chai.expect;
-
-const noop = function() { }
-  , tojs = JSON.stringify;
+  , expect = chai.expect
+  , noop = function() { };
 
 describe('states fsm', function() {
 
@@ -48,7 +46,7 @@ describe('states fsm', function() {
 
       expect(function() {
         temp.done();
-      }).to.throw('No definition provided for the following states:' + tojs(['a', 'b']));
+      }).to.throw('No definition provided for the following states:');
 
     });
 
@@ -67,7 +65,7 @@ describe('states fsm', function() {
 
       expect(function() {
         temp.done();
-      }).to.throw('No definition provided for the following states:' + tojs(['b']));
+      }).to.throw('No definition provided for the following states:');
     });
 
     it('should initialize states a and b', function() {
@@ -180,6 +178,7 @@ describe('states fsm', function() {
   describe('events', function() {
 
     it('should trigger a callback on an event', function(done) {
+
       var fsm = new States([
         'see'
       ]);
@@ -201,38 +200,94 @@ describe('states fsm', function() {
         {
           contractId: 'integer'
         }
-      ], function(q) {
-        expect(q.contractId).to.equal(24);
+      ], function(q, input) {
+        expect(input.contractId).to.equal(24);
         done();
+        return 0;
       });
 
       q.done();
-      q.input('see 24');
+      expect(q.input('see 24')).to.equal(0);
+    });
+
+    it('shouldn\'t allow illegal state access', function() {
+      var fsm = new States([
+        'PURCHASE',
+        'LIST'
+      ]);
+
+      fsm.on('LIST', ['PURCHASE'], function() {
+      });
+
+      fsm.on('PURCHASE', {
+        itemId: 'integer'
+      }, function() {
+      });
+
+      fsm.done();
+      expect(function() {
+        fsm.input('PURCHASE 81');
+      }).to.throw('Cannot run PURCHASE');
+
     });
 
     it('should allow legal state access', function(done) {
       var fsm = new States([
-        'list',
-        'buy'
+        'PURCHASE',
+        'LIST'
       ]);
 
-      fsm.on('list', function() {
+      fsm.on('LIST', ['PURCHASE'], function() {
       });
 
-      fsm.on('buy', {
+      fsm.on('PURCHASE', {
         itemId: 'integer'
-      }, function(q) {
-        expect(q.parent).to.equal('list');
+      }, function(q, input) {
+        expect(input.itemId).to.equal(81);
         done();
       });
 
       fsm.done();
-      fsm.input('list');
-      fsm.input('buy 81');
+      fsm.input('LIST');
+      fsm.input('PURCHASE 81');
     });
 
-    it('shouldn\'t allow illegal state access', function() {
+    it('should keep track of state between calls', function(done) {
+      var fsm = new States([
+        'use',
+        'show'
+      ]);
 
+      var dbs = {
+        local: {
+          id: ['1', '2', '3']
+        },
+        test: {
+          name: ['testing database']
+        }
+      };
+
+      fsm.on('use', [
+        {
+          dbName: 'string'
+        },
+        'show'
+      ], function(q, input) {
+        q.dbName = input.dbName;
+      });
+
+      fsm.on('show', {
+        column: 'string'
+      }, function(q, input) {
+        var result = dbs[q.dbName][input.column];
+        expect(result).to.deep.equal(['1', '2', '3']);
+        done();
+      });
+
+      fsm.done();
+
+      fsm.input('use local');
+      fsm.input('show id');
     });
   });
 });

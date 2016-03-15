@@ -5,7 +5,7 @@ const State = require('../lib/state')
   , expect = chai.expect;
 
 const noop = function() { };
-const parent = {};
+const parent = new State('root', noop, null);
 
 describe('state population', function() {
 
@@ -97,6 +97,17 @@ describe('state population', function() {
 
       expect(state.branch.b).to.exist;
       expect(state.branch.c).to.exist;
+    });
+  });
+
+  describe('parent linking', function() {
+    var root = new State('root', noop, null);
+
+    it('should link the root and child', function() {
+      new State('a', noop, root, [
+        'b'
+      ]);
+      expect(root.branch).to.have.property('b').and.equal('a');
     });
   });
 
