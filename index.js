@@ -1,1 +1,1 @@
-module.exports = require('./lib/states-old');
+module.exports = require('./lib/fsm');
