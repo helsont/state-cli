@@ -52,13 +52,12 @@ States.on('sell', [
   },
   'confirm'
 ], function(q, input) {
-  debugger;
   q.goto('confirm', input.id);
 });
 
 States.on('confirm', function(q, id) {
   console.log('Are you sure you want to purchase this?');
-
+  console.log('Going to assume yes...');
   db[id] = myDb[id];
   delete myDb[id];
 });
@@ -73,12 +72,12 @@ States.on('create', {
 }, function(q, input) {
   console.log(input);
   myDb[input.id] = input.value;
-  debugger;
 });
 
 // auto parameter inference
 States.on('list', [{
-  which: 'string?'
+  which: 'string?',
+  who: 'string?'
 }],
 function(q, input) {
   var value = input.which || 'myDb';
@@ -93,11 +92,10 @@ function(q, input) {
     console.log(obj[idx] + ' : ' + res);
   }
   console.log();
-
 });
 
 States.done();
 
 new CLI(States);
-// States.input('see 10');
+// States.input('list who');
 // States.input('sell 10 92');
