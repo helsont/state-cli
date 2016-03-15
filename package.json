@@ -1,0 +1,15 @@
+{
+  "name": "state-cli",
+  "version": "1.0.0",
+  "description": "A state-machine to easily create CLI without worrying about keeping track of the internal state.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "invariant": "^2.2.1"
+  }
+}
