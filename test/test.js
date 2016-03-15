@@ -1,23 +1,74 @@
 /*global describe, it*/
 
-var States = require('../index')
+const States = require('../index')
   , chai = require('chai')
-  , should = chai.should();
+  , expect = chai.expect;
 
-const noop = function() { };
+const noop = function() { }
+  , tojs = JSON.stringify;
 
 describe('states fsm', function() {
 
   describe('initialization', function() {
     var fsm = new States();
 
+    it('should fail to initialize states a and b', function() {
+      var temp = new States();
+
+      temp.on([
+        'a',
+        'b'
+      ]);
+
+      expect(function() {
+        temp.done();
+      }).to.throw('Failed to register the following states:' + tojs(['a', 'b']));
+
+    });
+
+    it('should fail to initialize state b', function() {
+      var temp = new States();
+
+      temp.on([
+        'a',
+        'b'
+      ]);
+
+      // Add one initializer, but not b's
+      temp.on('a', {
+        param: 'string'
+      }, noop);
+
+      expect(function() {
+        temp.done();
+      }).to.throw('Failed to register the following states:' + tojs(['b']));
+    });
+
+    it('should initialize states a and b', function() {
+      var temp = new States();
+
+      temp.on([
+        'a',
+        'b'
+      ]);
+
+      temp.on('a', {
+        param: 'string'
+      }, noop);
+
+      temp.on('b', {
+        param: 'integer'
+      }, noop);
+
+      temp.done();
+    });
+
     it('should initialize the root properly', function() {
       // initialize the main state
       fsm.on([
-        'see',
-        'list'
+        'see'
       ]);
-      
+
     });
 
     it('should create a simple command' , function() {
@@ -27,7 +78,7 @@ describe('states fsm', function() {
 
     it('should create a two arg command', function() {
       // A command with two args
-      States.on('buy', {
+      fsm.on('buy', {
         shares: 'integer',
         price: 'integer'
       }, noop);
@@ -37,7 +88,7 @@ describe('states fsm', function() {
       // More complex command -- several different args
       // Also, notice the the last 'sell' option.
       // This is a state accessible only when we run 'see'.
-      States.on('see', [
+      fsm.on('see', [
         {
           contractId: 'integer'
         },
@@ -52,7 +103,7 @@ describe('states fsm', function() {
 
     it('should bind states to each other', function() {
       // Complete initialization
-      States.done();
+      fsm.done();
     });
 
   });
